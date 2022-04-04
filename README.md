@@ -1,2 +1,2 @@
 # KharlStudios
- For all projects andworks
+ For all projects and works
