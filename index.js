@@ -10,7 +10,7 @@ const playerTwoImages = [
 	"images/main.jpeg",
 	"images/main.jpeg",
 ];
-let currentPlayer = "0";
+var currentPlayer = "0";
 let isGameOver = false;
 let isPhase1 = true;
 const allowedDropZonesID = [
@@ -24,86 +24,119 @@ const allowedDropZonesID = [
 	[5, 7, 9],
 	[5, 6, 8],
 ];
-const boxDraggable = [1, 2, 3, 4, 5, 6, 7, 8, 9];
 let currentImageDragged;
 let boxDraggedFrom;
 let boxDroppedInto;
 
 boxes.forEach((box, index) => {
 	box.textContent = "";
-	box.addEventListener("click", (Event) => {
-		if (!isGameOver && !box.hasChildNodes() && isPhase1) {
-			const imgElm = document.createElement("img");
-			imgElm.src =
-				currentPlayer === "0"
-					? playerOneImages[currentPlayer]
-					: playerTwoImages[currentPlayer - 1];
-			imgElm.setAttribute("draggable", "true");
-			imgElm.setAttribute("id", currentPlayer);
+	box.addEventListener(
+		"click",
+		(Event) => {
+			if (!isGameOver && !box.hasChildNodes() && isPhase1) {
+				const imgElm = document.createElement("img");
+				imgElm.src =
+					currentPlayer === "0"
+						? playerOneImages[currentPlayer]
+						: playerTwoImages[currentPlayer - 1];
+				imgElm.setAttribute("draggable", "true");
+				imgElm.setAttribute("id", currentPlayer);
 
-			imgElm.addEventListener("dragstart", handleImageDragStart);
-			imgElm.addEventListener("dragend", handleImageDragEnd);
-			imgElm.addEventListener("drag", handleImageDrag);
+				imgElm.addEventListener("dragstart", handleImageDragStart);
 
-			box.appendChild(imgElm);
-			currentPlayer === "0" ? playerOneImages.pop() : playerTwoImages.pop();
-			// Functions
-			checkPhaseOneDone();
-			checkForWin();
-			changeTurn();
-			// }
-		}
-	});
+				box.appendChild(imgElm);
+				currentPlayer === "0" ? playerOneImages.pop() : playerTwoImages.pop();
+
+				// Functions
+				checkPhaseOneDone();
+				checkForWin();
+				changeTurn();
+			}
+		},
+		{ once: true }
+	);
 	box.addEventListener("dragover", handleBoxDragOver);
 	box.addEventListener("drop", handleBoxDrop);
-	box.addEventListener("dragenter", handleBoxDragEnter);
-	box.addEventListener("dragleave", handleBoxDragLeave);
 });
 
 function handleImageDragStart(Event) {
-	// Event.preventDefault();
+	if (isGameOver || isPhase1) return;
+	if (Event.target.id !== currentPlayer) return;
 	boxDraggedFrom = Event.target.parentElement;
 	currentImageDragged = Event.target;
-	console.log("Drag started from box", boxDraggedFrom);
-}
-function handleImageDragEnd(Event) {
-	console.log("Drag ended", Event);
-}
-function handleImageDrag(Event) {
-	console.log("Dragging", Event);
+	// console.log("Drag started from box", boxDraggedFrom);
 }
 
 function handleBoxDragOver(Event) {
 	Event.preventDefault();
-	console.log("Dragged over box");
+	// console.log("Dragged over box", Event.target.parentElement);
 }
 function handleBoxDrop(Event) {
-	console.log("Dropped", Event.target);
-	boxDroppedInto = Event.target;
-	if (!Event.target.classList.contains("box") || Event.target.hasChildNodes())
+	// console.log("Dropped", Event.target);
+	if (!Event.target.classList.contains("box") || Event.target.hasChildNodes()) {
+		currentImageDragged = "";
+		boxDraggedFrom = "";
+		boxDroppedInto = "";
 		return;
-	console.log(allowedDropZonesID[boxDraggedFrom.id - 1]);
+	}
+	boxDroppedInto = Event.target;
+	// console.log(allowedDropZonesID[boxDraggedFrom.id - 1]);
 	if (
 		allowedDropZonesID[boxDraggedFrom.id - 1].includes(
 			Number(boxDroppedInto.id)
 		)
 	) {
 		Event.target.appendChild(currentImageDragged);
+		checkForWin();
+		currentImageDragged = "";
+		boxDraggedFrom = "";
+		boxDroppedInto = "";
+		changeTurn();
 	} else {
 		return;
 	}
 }
-function handleBoxDragEnter(Event) {
-	console.log("Entered dropzone!", Event);
-}
-function handleBoxDragLeave(Event) {
-	console.log("Left dropzone!", Event);
-}
 
 // Function Declarations
 function checkForWin() {
-	console.log("Function for winner!");
+	// console.log("Function for winner!");
+	// Box Ids for win conditions
+	let winConditions = [
+		[1, 2, 3],
+		[4, 5, 6],
+		[7, 8, 9],
+		[1, 4, 7],
+		[2, 5, 8],
+		[3, 6, 9],
+		[1, 5, 9],
+		[3, 5, 7],
+	];
+	// console.log(boxes[winConditions[0][0] - 1]);
+	for (let i = 0; i < winConditions.length; i++) {
+		let winConditionsDivs = [],
+			canCheckForWin;
+		for (let j = 0; j < winConditions[i].length; j++) {
+			// console.log(boxes[winConditions[i][j] - 1]);
+			// winConditionsDivs[j] =
+			// 	boxes[winConditions[i][j] - 1].querySelector("img");
+			winConditionsDivs[j] = boxes[winConditions[i][j] - 1];
+		}
+
+		canCheckForWin = winConditionsDivs.every((div) => {
+			return div.hasChildNodes();
+		});
+		// console.log(canCheckForWin);
+		if (!canCheckForWin) continue;
+		let isWin = winConditionsDivs.every((div) => {
+			return div.querySelector("img").id == currentPlayer;
+		});
+		// alert(currentPlayer);
+		if (!isWin) continue;
+		isGameOver = true;
+		alert(`Game Over ${currentPlayer}`);
+	}
 }
+
 function changeTurn() {
 	if (currentPlayer == "0") {
 		currentPlayer = "1";
